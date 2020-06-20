@@ -1,0 +1,61 @@
+.equ KEY1, 0x10000050
+.equ STACK_BASE, 0x02000000
+.equ JTAG_BASE, 0x10001000
+.equ TIMER_BASE, 0x10002000
+.equ PERIOD, 0x0000000f
+.equ PRESSED, 0x00000002
+
+.text
+.global _start
+_start:
+       movia r2, KEY1
+       movia r3, STACK_BASE
+       movia r4, JTAG_BASE
+       movia r5, TIMER_BASE
+       movia r6, PERIOD
+       movia r7, PRESSED
+       movi r8, 6
+       movi r9, 10
+       movi r10, 8
+
+       addi sp, sp, -1 #stack 4 output terminal
+       stb r0, 0(sp)
+       addi sp, sp, -1
+       stb r9, 0(sp)
+
+       stwio r6, 8(r5) #for timer
+       srli r6, r6, 16
+       stwio r6, 12(r5)
+       stwio r8, 4(r5)
+
+Read: ldwio r11, 0(r2)
+
+Press: beq r7, r11, delay
+       bne r7, r11, Read
+
+delay: movia r23, 2500000
+waste: subi r23, r23, 1
+       bne r23, r0, waste
+       beq r23, r0, Rand
+
+Rand:   stwio r5, 16(r5)
+        ldwio r12, 16(r5)
+        ldwio r13, 16(r5)
+        slli r13, r13, 16
+        or r12, r12, r13
+
+        div r14, r12, r10
+        mul r15, r14, r10
+        sub r16, r12, r15
+
+num2str: addi r16, r16, 48
+         addi sp, sp, -1
+         stb r16, 0(sp)
+
+cout: ldb r17, 0(sp)
+      beq r17, r0, endCout
+      stb r17, 0(r4)
+      addi sp, sp, 1
+      br cout
+
+endCout: ret
